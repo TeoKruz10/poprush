@@ -3,473 +3,151 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PopRush! — Fast, Color‑Blast Puzzle</title>
-  <meta name="description" content="PopRush is a fast, colorful click-to-pop puzzle with power-ups. One-file, offline-friendly, runs anywhere." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>PopRush Plus</title>
+  <meta name="description" content="PopRush Plus — Play, track stats, and climb the local leaderboard!" />
   <style>
-    :root {
-      --bg: #0f1226;           /* deep indigo */
-      --panel: #14183a;        /* dark slate */
-      --accent: #ff2f6d;       /* hot pink */
-      --accent-2: #00f2ff;     /* cyan */
-      --good: #2ee96f;         /* neon green */
-      --warning: #ffcc00;      /* gold */
-      --grid-gap: 6px;
-      --tile-size: 46px;       /* tweak for laptops */
-      --shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 -2px 0 rgba(255,255,255,.05);
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: 'Rubik', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: radial-gradient(1200px 600px at 10% 0%, #1a1f4d 0%, var(--bg) 60%),
-                  radial-gradient(900px 500px at 100% 100%, #1a1f4d 0%, var(--bg) 55%);
-      color: #f5f7ff;
-      display: grid; place-items: center;
-      padding: 18px;
-    }
-    .app {
-      width: min(100%, 1200px);
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: start;
-    }
-    @media (max-width: 860px) {
-      .app { grid-template-columns: 1fr; }
-      :root { --tile-size: 42px; }
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-    }
-    header.brand {
-      grid-column: 1 / -1;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 18px; gap: 14px;
-    }
-    .logo {
-      display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;
-    }
-    .logo-badge {
-      width: 54px; height: 54px; border-radius: 14px; position: relative; overflow: hidden; flex: none;
-      box-shadow: 0 10px 24px rgba(0,0,0,.4);
-      background: conic-gradient(from 200deg, #ff2f6d, #ff8a00, #ffee00, #33ff57, #00f2ff, #9747ff, #ff2f6d);
-    }
-    .logo-badge::after {
-      content: ""; position: absolute; inset: 2px; border-radius: 12px; background: #0b0e22cc; backdrop-filter: blur(4px);
-    }
-    .logo-text { font-family: 'Chakra Petch', sans-serif; font-weight: 700; letter-spacing: .5px; font-size: 28px; }
-    .tagline { opacity: .8; font-size: 14px; margin-left: 4px; }
-
-    .board-wrap { padding: 16px; display: grid; grid-template-columns: auto 1fr; gap: 16px; }
-    .sidebar { padding: 16px; }
-
-    .stats { display: grid; gap: 10px; }
-    .stat {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-    }
-    .stat b { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 12px 16px; border-radius: 12px; border: 1px solid transparent; cursor: pointer; font-weight: 700;
-      background: linear-gradient(180deg, var(--accent), #c3004b); color: #fff; letter-spacing: .3px;
-      box-shadow: 0 10px 24px rgba(255,47,109,.25);
-    }
-    .btn.secondary { background: linear-gradient(180deg, #263063, #1b2248); border-color: rgba(255,255,255,.12); box-shadow:none; }
-    .btn.ghost { background: transparent; border-color: rgba(255,255,255,.15); }
-    .btn:disabled { opacity: .6; cursor: not-allowed; }
-
-    .board {
-      display: grid; gap: var(--grid-gap);
-      grid-template-columns: repeat(var(--cols), var(--tile-size));
-      grid-auto-rows: var(--tile-size);
-      padding: 16px; border-radius: 18px; background: var(--panel); position: relative;
-    }
-
-    .tile {
-      width: var(--tile-size); height: var(--tile-size); border-radius: 12px; display: grid; place-items: center;
-      font-weight: 800; color: #0b0e22; user-select: none; cursor: pointer; position: relative; outline: none;
-      transition: transform .08s ease, box-shadow .12s ease;
-      box-shadow: inset 0 -3px rgba(0,0,0,.15), 0 6px 12px rgba(0,0,0,.2);
-    }
-    .tile:hover { transform: translateY(-2px); }
-    .tile:active { transform: translateY(1px); }
-    .tile[data-type="bomb"]::after,
-    .tile[data-type="wild"]::after,
-    .tile[data-type="freeze"]::after {
-      content:""; position:absolute; inset:0; border-radius:12px; box-shadow:0 0 0 3px rgba(255,255,255,.3) inset;
-    }
-    .selected { box-shadow: 0 0 0 3px #fff, 0 10px 22px rgba(0,0,0,.35) !important; }
-
-    .overlay { position:absolute; inset:0; display:grid; place-items:center; backdrop-filter: blur(2px); }
-    .panel {
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 22px; text-align:center;
-      box-shadow: var(--shadow);
-    }
-    .title { font-family: 'Chakra Petch', sans-serif; font-size: 34px; margin: 0 0 8px; letter-spacing: .5px; }
-    .subtitle { opacity: .85; margin: 0 0 16px; }
-
-    .legend { display:flex; gap: 12px; flex-wrap: wrap; justify-content:center; font-size: 14px; opacity:.9 }
-    .legend span { display:inline-flex; gap:8px; align-items:center; }
-    .badge { width:18px; height:18px; border-radius:5px; display:inline-block; }
-
-    footer { grid-column: 1 / -1; opacity: .8; text-align: center; font-size: 13px; padding: 6px 0 2px; }
-
-    /* Color palette for tiles */
-    .c-0 { background: linear-gradient(180deg, #ff99bc, #ff2f6d); }
-    .c-1 { background: linear-gradient(180deg, #ffe28a, #ff8a00); }
-    .c-2 { background: linear-gradient(180deg, #b7ffb7, #2ee96f); }
-    .c-3 { background: linear-gradient(180deg, #a7f0ff, #00cde0); }
-    .c-4 { background: linear-gradient(180deg, #cdb4ff, #9747ff); }
-    .power-bomb { background: radial-gradient(circle at 30% 30%, #fff, #ff4b4b 55%, #9b0000 100%); color:#fff }
-    .power-wild { background: radial-gradient(circle at 30% 30%, #fff, #00f2ff 55%, #007e86 100%); }
-    .power-freeze { background: radial-gradient(circle at 30% 30%, #fff, #82ff7a 55%, #18763f 100%); color:#08210f }
-
-    .hint { opacity: .8; font-size: 12px; margin-top: 10px; }
+    body{font-family:sans-serif;background:#0f1226;color:white;margin:0;padding:0;display:flex;flex-direction:column;align-items:center}
+    #board{display:grid;gap:4px;margin-top:10px}
+    .tile{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#111;cursor:pointer}
+    .c0{background:#ff2f6d}.c1{background:#ff8a00}.c2{background:#2ee96f}.c3{background:#00cde0}.c4{background:#9747ff}
+    button{margin:5px;padding:8px 12px;border:none;border-radius:6px;background:#ff2f6d;color:white;font-weight:bold;cursor:pointer}
+    #stats,#leaderboard,#history{margin-top:20px;width:90%;max-width:500px}
+    h2{margin-bottom:4px}
+    table{width:100%;border-collapse:collapse}
+    td,th{border-bottom:1px solid rgba(255,255,255,0.2);padding:4px;text-align:left}
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="brand card">
-      <a class="logo" href="#" aria-label="PopRush Home">
-        <span class="logo-badge" aria-hidden="true"></span>
-        <span>
-          <div class="logo-text">PopRush!</div>
-          <div class="tagline">Fast • Colorful • Addicting</div>
-        </span>
-      </a>
-      <div>
-        <button id="btn-share" class="btn ghost" title="Copy shareable link">Share</button>
-        <button id="btn-how" class="btn secondary">How to Play</button>
-        <button id="btn-new" class="btn">New Game</button>
-      </div>
-    </header>
-
-    <section class="board-wrap card">
-      <div class="sidebar">
-        <div class="stats">
-          <div class="stat"><span>Score</span><b id="score">0</b></div>
-          <div class="stat"><span>Best</span><b id="best">0</b></div>
-          <div class="stat"><span>Time</span><b id="time">60</b></div>
-          <div class="stat"><span>Combo</span><b id="combo">x1</b></div>
-          <div class="stat"><span>Moves</span><b id="moves">0</b></div>
-          <button id="btn-pause" class="btn secondary">Pause</button>
-          <button id="btn-sfx" class="btn ghost">SFX: On</button>
-        </div>
-      </div>
-      <div style="position:relative;">
-        <div id="board" class="board" role="grid" aria-label="PopRush board"></div>
-        <div id="overlay" class="overlay" hidden>
-          <div class="panel">
-            <h2 class="title" id="overlay-title">PopRush!</h2>
-            <p class="subtitle" id="overlay-sub">Click groups of 2+ matching tiles to pop them. Chain pops to raise your combo!</p>
-            <div class="legend" style="margin:10px 0 16px;">
-              <span><i class="badge power-bomb"></i> Bomb: clears 3×3</span>
-              <span><i class="badge power-wild"></i> Wild: matches any color</span>
-              <span><i class="badge power-freeze"></i> Freeze: +8s time</span>
-            </div>
-            <button id="btn-start" class="btn">Start</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card" style="padding:16px;">
-      <h3 style="margin:8px 0 6px; font-family:'Chakra Petch',sans-serif;">About the game</h3>
-      <p style="opacity:.9;margin:0 0 10px;">PopRush is a speedy, one‑minute puzzle. Click any connected group of <b>2 or more</b> same‑color tiles to pop them. Empty spaces collapse, new tiles fall, and sometimes <b>power‑ups</b> drop. Bigger groups = bigger points. Chain pops quickly to build your <b>combo</b> and go for the high score.</p>
-      <div class="legend">
-        <span><i class="badge power-bomb"></i> Bomb: pop a 3×3 area</span>
-        <span><i class="badge power-wild"></i> Wild: counts as any color</span>
-        <span><i class="badge power-freeze"></i> Freeze: adds +8s to timer</span>
-      </div>
-      <p class="hint">Tip: Try to set up massive groups, then hit a Bomb to trigger huge cascades.</p>
-    </section>
-
-    <footer>© <span id="year"></span> PopRush! • Made to be shared, learned, and remixed.</footer>
+  <h1>PopRush Plus</h1>
+  <div>
+    <button id="startBtn">Start Game</button>
+    <span>Score: <b id="score">0</b></span>
+    <span>Time: <b id="time">60</b></span>
+    <span>Combo: <b id="combo">x1</b></span>
+  </div>
+  <div id="board"></div>
+  <div id="stats">
+    <h2>Lifetime Stats</h2>
+    <div>Total Plays: <span id="plays">0</span></div>
+    <div>Total Time Played: <span id="timePlayed">0</span> sec</div>
+    <div>Color Pops: 
+      <span style="color:#ff2f6d">Pink</span> <b id="color0">0</b>, 
+      <span style="color:#ff8a00">Orange</span> <b id="color1">0</b>, 
+      <span style="color:#2ee96f">Green</span> <b id="color2">0</b>, 
+      <span style="color:#00cde0">Cyan</span> <b id="color3">0</b>, 
+      <span style="color:#9747ff">Purple</span> <b id="color4">0</b>
+    </div>
+  </div>
+  <div id="leaderboard">
+    <h2>Top 10 Scores</h2>
+    <table id="lbTable"><tr><th>Rank</th><th>Score</th></tr></table>
+  </div>
+  <div id="history">
+    <h2>Last 10 Games</h2>
+    <table id="histTable"><tr><th>Score</th><th>Moves</th><th>Max Combo</th></tr></table>
   </div>
 
-  <script>
-  (() => {
-    // --- Game Config ---
-    const COLS = 10;
-    const ROWS = 12;
-    const COLORS = 5; // 0..4
-    const MIN_GROUP = 2;
-    const START_TIME = 60;
-    const POWER_CHANCE = 0.08; // 8% chance a new tile is a power-up
-    const SFX = {
-      pop: new Audio('data:audio/wav;base64,UklGRoQNAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAABkYXRhUA0AAAAA/////wD//wD//wD//wD/AAAAAP//AP//AP//AP8AAP8AAP8A/wD/AP8A/wD/AAAAAP//AP//AP8AAP8AAAAA'),
-      tick: new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAABkYXRhRAUAAAAA////AP//AAAA//8A'),
-      boom: new Audio('data:audio/wav;base64,UklGRpAHAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAABkYXRhQA0AAAAA/////wD//wAA//8A//8AAP8A'),
-    };
-    let sfxOn = true;
+<script>
+(function(){
+  const COLS=10, ROWS=12, COLORS=5, MIN=2, START_TIME=60;
+  let score=0, combo=1, timeLeft=START_TIME, grid=[], timer=null, moves=0, maxCombo=1;
+  const $=id=>document.getElementById(id);
+  const stats=JSON.parse(localStorage.getItem('poprushStats')||'{"plays":0,"timePlayed":0,"colors":[0,0,0,0,0]}');
+  const lb=JSON.parse(localStorage.getItem('poprushLB')||'[]');
+  const hist=JSON.parse(localStorage.getItem('poprushHist')||'[]');
 
-    // --- State ---
-    let grid = [];
-    let score = 0;
-    let best = Number(localStorage.getItem('poprush-best')||0);
-    let combo = 1;
-    let moves = 0;
-    let timeLeft = START_TIME;
-    let running = false;
-    let paused = false;
-    let timerId = null;
-
-    const el = (id) => document.getElementById(id);
-    const boardEl = el('board');
-
-    // Accessibility/grid sizing
-    boardEl.style.setProperty('--cols', COLS);
-
-    function rand(n){ return Math.floor(Math.random()*n); }
-
-    const TYPES = { color:'color', bomb:'bomb', wild:'wild', freeze:'freeze' };
-
-    function newTile() {
-      // Chance to spawn a power-up
-      if (Math.random() < POWER_CHANCE) {
-        const r = Math.random();
-        if (r < 0.34) return { type: TYPES.bomb, color: null };
-        if (r < 0.67) return { type: TYPES.wild, color: null };
-        return { type: TYPES.freeze, color: null };
-      }
-      return { type: TYPES.color, color: rand(COLORS) };
-    }
-
-    function initGrid() {
-      grid = Array.from({length: ROWS}, () => Array.from({length: COLS}, newTile));
-      ensureMovesExist();
-      render();
-    }
-
-    function ensureMovesExist(){
-      // crude check: if no group of 2 exists, reroll random row
-      for (let tries=0; tries<20; tries++){
-        if (hasAnyGroup()) return; // ok
-        const r = rand(ROWS);
-        grid[r] = Array.from({length: COLS}, newTile);
+  function saveStats(){
+    localStorage.setItem('poprushStats',JSON.stringify(stats));
+    localStorage.setItem('poprushLB',JSON.stringify(lb));
+    localStorage.setItem('poprushHist',JSON.stringify(hist));
+  }
+  function updateStats(){
+    $('plays').textContent=stats.plays;
+    $('timePlayed').textContent=stats.timePlayed;
+    stats.colors.forEach((c,i)=>$('color'+i).textContent=c);
+    const lbTable=$('lbTable'); lbTable.innerHTML='<tr><th>Rank</th><th>Score</th></tr>';
+    lb.slice(0,10).forEach((s,i)=>{lbTable.innerHTML+=`<tr><td>${i+1}</td><td>${s}</td></tr>`});
+    const hTable=$('histTable'); hTable.innerHTML='<tr><th>Score</th><th>Moves</th><th>Max Combo</th></tr>';
+    hist.slice(0,10).forEach(h=>{hTable.innerHTML+=`<tr><td>${h.s}</td><td>${h.m}</td><td>${h.c}</td></tr>`});
+  }
+  function newTile(){return{color:Math.floor(Math.random()*COLORS)};}
+  function render(){
+    const board=$('board'); board.innerHTML=''; board.style.gridTemplateColumns=`repeat(${COLS},40px)`;
+    for(let y=0;y<ROWS;y++){
+      for(let x=0;x<COLS;x++){
+        const t=grid[y][x]; const d=document.createElement('div');
+        d.className='tile c'+t.color; d.dataset.x=x; d.dataset.y=y;
+        d.onclick=()=>clickTile(x,y);
+        board.appendChild(d);
       }
     }
-
-    function hasAnyGroup(){
-      for (let y=0;y<ROWS;y++){
-        for (let x=0;x<COLS;x++){
-          const g = flood(x,y,false);
-          if (g.size >= MIN_GROUP) return true;
-        }
-      }
-      return false;
-    }
-
-    function neighbors(x,y){
-      return [ [x+1,y],[x-1,y],[x,y+1],[x,y-1] ].filter(([cx,cy])=>cx>=0&&cx<COLS&&cy>=0&&cy<ROWS);
-    }
-
-    function isMatch(a,b){
-      if (!a || !b) return false;
-      if (a.type===TYPES.freeze||a.type===TYPES.bomb||a.type===TYPES.wild) return true; // power-up matches any
-      if (b.type===TYPES.freeze||b.type===TYPES.bomb||b.type===TYPES.wild) return true;
-      return a.type===TYPES.color && b.type===TYPES.color && a.color===b.color;
-    }
-
-    function flood(x,y,mark=true){
-      const start = grid[y][x];
-      if (!start) return { set:new Set(), cells:[], size:0, hasBomb:false, hasWild:false, hasFreeze:false };
-      const key=(x,y)=>x+','+y;
-      const seen=new Set();
-      const q=[[x,y]];
-      let hasBomb=false, hasWild=false, hasFreeze=false;
-      while(q.length){
-        const [cx,cy]=q.pop();
-        const k=key(cx,cy);
-        if(seen.has(k)) continue;
-        const t=grid[cy][cx];
-        if(!t) continue;
-        // matching rule: match if same color OR either is wild/freeze/bomb
-        if (isMatch(start,t)){
-          seen.add(k);
-          if (t.type===TYPES.bomb) hasBomb=true;
-          if (t.type===TYPES.wild) hasWild=true;
-          if (t.type===TYPES.freeze) hasFreeze=true;
-          neighbors(cx,cy).forEach(n=>q.push(n));
-        }
-      }
-      const cells=[...seen].map(s=>s.split(',').map(Number));
-      if (mark) highlight(cells);
-      return { set:seen, cells, size:cells.length, hasBomb, hasWild, hasFreeze };
-    }
-
-    function highlight(cells){
-      document.querySelectorAll('.tile').forEach(t=>t.classList.remove('selected'));
-      cells.forEach(([x,y])=>{
-        const tileEl = document.querySelector(`.tile[data-x="${x}"][data-y="${y}"]`);
-        if (tileEl) tileEl.classList.add('selected');
-      });
-    }
-
-    function clearHighlight(){
-      document.querySelectorAll('.tile').forEach(t=>t.classList.remove('selected'));
-    }
-
-    function applyGravity(){
-      // collapse each column downward
-      for (let x=0;x<COLS;x++){
-        const col=[];
-        for (let y=0;y<ROWS;y++) if(grid[y][x]) col.push(grid[y][x]);
-        // fill from bottom
-        for (let y=ROWS-1;y>=0;y--){
-          grid[y][x] = col.pop() || null;
-        }
-        // spawn new at top where null
-        for (let y=0;y<ROWS;y++) if(!grid[y][x]) grid[y][x]=newTile();
-      }
-    }
-
-    function popCells(group){
-      if (group.size < MIN_GROUP) { clearHighlight(); return; }
-      // score: n*(n-1)*combo
-      const n = group.size;
-      score += Math.max(0, n*(n-1)) * combo;
+  }
+  function clickTile(x,y){
+    const group=flood(x,y);
+    if(group.length>=MIN){
       moves++;
-      if (group.hasFreeze) timeLeft = Math.min(120, timeLeft + 8);
-
-      // if any bomb inside, clear 3x3 around each bomb
-      const extraToClear = new Set();
-      if (group.hasBomb){
-        group.cells.forEach(([x,y])=>{
-          if (grid[y][x].type===TYPES.bomb){
-            for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-              const nx=x+dx, ny=y+dy;
-              if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS) extraToClear.add(nx+","+ny);
-            }
-          }
+      score+=group.length*group.length*combo;
+      stats.colors[grid[y][x].color]+=group.length;
+      combo=combo+(group.length>=5?2:1); maxCombo=Math.max(maxCombo,combo);
+      group.forEach(([gx,gy])=>grid[gy][gx]=null);
+      gravity();
+      render();
+      $('score').textContent=score;
+      $('combo').textContent='x'+combo;
+    }
+  }
+  function flood(x,y){
+    const target=grid[y][x]; const seen=new Set(); const q=[[x,y]];
+    while(q.length){
+      const [cx,cy]=q.pop(); const key=cx+','+cy;
+      if(seen.has(key))continue;
+      if(grid[cy][cx] && grid[cy][cx].color===target.color){
+        seen.add(key);
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+          const nx=cx+dx, ny=cy+dy;
+          if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS)q.push([nx,ny]);
         });
       }
-
-      // clear the main group
-      group.cells.forEach(([x,y])=> grid[y][x]=null);
-      // clear bomb splash
-      extraToClear.forEach(k=>{
-        const [x,y]=k.split(',').map(Number);
-        grid[y][x]=null;
-      });
-
-      // combo increases with big pops
-      combo = Math.min(10, combo + (n>=5?2:1));
-      if (sfxOn) (group.hasBomb ? SFX.boom : SFX.pop).play().catch(()=>{});
-
-      applyGravity();
-      ensureMovesExist();
-      render();
     }
-
-    function decayCombo(){ combo = Math.max(1, Math.floor(combo*0.85)); }
-
-    function render(){
-      // HUD
-      el('score').textContent = score.toLocaleString();
-      el('best').textContent = best.toLocaleString();
-      el('combo').textContent = 'x' + combo;
-      el('moves').textContent = moves;
-      // board
-      boardEl.innerHTML = '';
-      for (let y=0;y<ROWS;y++){
-        for (let x=0;x<COLS;x++){
-          const t = grid[y][x];
-          const d = document.createElement('div');
-          d.className = 'tile ' + tileClass(t);
-          d.tabIndex = 0;
-          d.setAttribute('role','gridcell');
-          d.dataset.x = x; d.dataset.y = y;
-          d.dataset.type = t.type;
-          d.addEventListener('mouseenter', ()=>{
-            if (!running||paused) return; const g=flood(x,y,true); if (g.size<MIN_GROUP) clearHighlight();
-          });
-          d.addEventListener('mouseleave', ()=>{ /* keep highlight until next hover */ });
-          d.addEventListener('click', ()=>{ if (!running||paused) return; const g=flood(x,y,false); popCells(g); });
-          d.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); const g=flood(x,y,false); popCells(g);} });
-          boardEl.appendChild(d);
-        }
-      }
+    return [...seen].map(s=>s.split(',').map(Number));
+  }
+  function gravity(){
+    for(let x=0;x<COLS;x++){
+      let col=[];
+      for(let y=0;y<ROWS;y++)if(grid[y][x])col.push(grid[y][x]);
+      for(let y=ROWS-1;y>=0;y--)grid[y][x]=col.pop()||newTile();
     }
-
-    function tileClass(t){
-      if (t.type===TYPES.bomb) return 'power-bomb';
-      if (t.type===TYPES.wild) return 'power-wild';
-      if (t.type===TYPES.freeze) return 'power-freeze';
-      return 'c-'+t.color;
+  }
+  function tick(){
+    timeLeft--;
+    $('time').textContent=timeLeft;
+    if(timeLeft<=0){
+      clearInterval(timer);
+      endGame();
     }
-
-    function startGame(){
-      score=0; combo=1; moves=0; timeLeft=START_TIME; running=true; paused=false; clearInterval(timerId);
-      el('overlay').hidden = true;
-      tickTimer();
-      timerId = setInterval(tickTimer, 1000);
-    }
-
-    function tickTimer(){
-      if (!running||paused) return;
-      timeLeft--; if (sfxOn && timeLeft<=10 && timeLeft>0) SFX.tick.play().catch(()=>{});
-      if (timeLeft<=0){
-        gameOver(); return;
-      }
-      el('time').textContent = timeLeft;
-      decayCombo();
-    }
-
-    function gameOver(){
-      running=false; paused=false; clearInterval(timerId);
-      if (score>best){ best=score; localStorage.setItem('poprush-best', String(best)); }
-      el('time').textContent = 0;
-      showOverlay('Time\'s up!','Nice run. Hit Start to go again. Can you beat your Best?');
-    }
-
-    function showOverlay(title, sub){
-      el('overlay-title').textContent = title;
-      el('overlay-sub').textContent = sub;
-      el('overlay').hidden = false;
-    }
-
-    // --- Controls ---
-    el('btn-start').addEventListener('click', startGame);
-    el('btn-new').addEventListener('click', ()=>{ initGrid(); startGame(); });
-    el('btn-pause').addEventListener('click', ()=>{
-      if (!running) return;
-      paused = !paused;
-      el('btn-pause').textContent = paused ? 'Resume' : 'Pause';
-      if (!paused) { // resume
-        timerId = setInterval(tickTimer, 1000);
-      } else {
-        clearInterval(timerId);
-        showOverlay('Paused','Stretch your fingers, then Resume!');
-      }
-    });
-    el('btn-sfx').addEventListener('click', ()=>{ sfxOn=!sfxOn; el('btn-sfx').textContent = 'SFX: ' + (sfxOn?'On':'Off'); });
-    el('btn-how').addEventListener('click', ()=>{
-      showOverlay('How to Play','Click groups of 2+ matching tiles. Power-ups: Bomb clears 3×3, Wild matches any color, Freeze adds +8s. Score big by popping large groups fast to grow your combo.');
-    });
-    el('btn-share').addEventListener('click', async()=>{
-      const url = location.href;
-      try {
-        await navigator.clipboard.writeText(url);
-        const b = el('btn-share'); b.textContent='Copied!'; setTimeout(()=>b.textContent='Share',1200);
-      } catch (e) { alert('Link: '+url); }
-    });
-
-    // --- Boot ---
-    el('year').textContent = new Date().getFullYear();
-    initGrid();
-    showOverlay('PopRush!','Click groups of 2+ matching tiles to pop them. Chain pops quickly to boost your combo!');
-  })();
-  </script>
+    combo=Math.max(1,Math.floor(combo*0.9));
+    $('combo').textContent='x'+combo;
+    stats.timePlayed++;
+  }
+  function startGame(){
+    score=0; combo=1; moves=0; maxCombo=1; timeLeft=START_TIME;
+    grid=Array.from({length:ROWS},()=>Array.from({length:COLS},newTile));
+    render();
+    $('score').textContent=score;
+    $('time').textContent=timeLeft;
+    $('combo').textContent='x1';
+    clearInterval(timer); timer=setInterval(tick,1000);
+  }
+  function endGame(){
+    stats.plays++;
+    lb.push(score); lb.sort((a,b)=>b-a);
+    hist.unshift({s:score,m:moves,c:maxCombo});
+    saveStats();
+    updateStats();
+  }
+  $('startBtn').onclick=startGame;
+  updateStats();
+})();
+</script>
 </body>
 </html>
